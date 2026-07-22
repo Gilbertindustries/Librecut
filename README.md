@@ -13,6 +13,12 @@ There is also an Inkscape plugin inside of the utils directory, this is the recc
 
 ---
 
+## License
+
+This project is licensed under the **GNU General Public License v2.0** (GPLv2) - see the [LICENSE](LICENSE) file for details. 
+
+Portions of this project are derived from Arlet's Freecut project, also licensed under GPLv2.
+
 ## Overview
 
 Librecut aims to modernize and expand upon **Arlet’s Freecut** (thank you goat) firmware, providing:
