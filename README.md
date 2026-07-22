@@ -13,3 +13,7 @@ PROVO CRAFT.
 ## Librecutter aims to modernize and add function to Arlet's Freecut
 
 Librecutter
+
+Librecutter is a open-source free firmware for the Cricut(TM) CRV001 Personal Electronic cutter. 
+
+It allows computer control via half baked HPGL support and python utilities 
