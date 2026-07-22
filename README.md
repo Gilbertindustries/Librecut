@@ -34,6 +34,8 @@ Python-based CLI utilities for sending commands.
 
 To flash this firmware onto the Cricut mainboard, you will need an **AVR Programmer** (such as a USBasp, AVRISP, or an **Arduino** running the [ArduinoISP sketch](https://docs.arduino.cc/built-in-examples/arduino-isp/ArduinoISP/)).
 
+You will also need the [Arduino IDE](https://www.arduino.cc/en/software/) to compile Librecut. 
+
 ### 1. Board Header Location & Layout
 
 Locate header **`J5`** on the Cricut mainboard. Looking at the **top view** of the board, the pin arrangement relative to the silkscreen is structured as follows:
