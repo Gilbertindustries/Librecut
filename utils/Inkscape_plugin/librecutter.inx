@@ -5,8 +5,11 @@
 
     <param name="port" type="string" gui-text="Serial Port:">COM13</param>
     <param name="baudrate" type="int" min="2400" max="250000" gui-text="Baudrate:">115200</param>
-    <param name="speed" type="int" min="1" max="500" gui-text="Speed:">100</param>
-    <param name="pressure" type="int" min="1" max="500" gui-text="Pressure:">200</param>
+
+    <separator/>
+    <param name="override_dials" type="bool" gui-text="Override Hardware Dials?">false</param>
+    <param name="speed" type="int" min="1" max="500" gui-text="Software Speed (if overriding):">100</param>
+    <param name="pressure" type="int" min="1" max="500" gui-text="Software Pressure (if overriding):">200</param>
 
     <separator/>
     <param name="resolution" type="float" min="0.1" max="10.0" precision="1" gui-text="Curve Detail (Smaller = Smoother):">0.5</param>

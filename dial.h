@@ -37,9 +37,16 @@ enum
     MAX_DIALS
 };
 
+/* --- Raw Notch Positions --- */
 int dial_get_speed( void );
 int dial_get_pressure( void );
 int dial_get_size( void );
+
+/* --- Mapped Hardware Values --- */
+uint16_t dial_get_mapped_speed( void );
+uint16_t dial_get_mapped_pressure( void );
+
+/* --- Control & Initialization --- */
 void dial_poll( void );
 void dial_init( void );
 

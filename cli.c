@@ -45,7 +45,11 @@
 
 #define BUFLEN 100 
 #define MAX_ARGS 10
-
+void beep(int ms){
+beeper_on( 1760 );
+    msleep( ms );
+    beeper_off( );
+}
 static char buf[BUFLEN + 1];
 static char *argv[MAX_ARGS+1];
 static uint8_t buf_len = 0;
@@ -72,7 +76,8 @@ enum
     C_LED,
     C_HPGL,
     C_PROGRESS,
-    C_DONE
+    C_DONE,
+    C_CONNECTED    // <-- Add this
 };
 
 static struct token
@@ -107,6 +112,7 @@ static const keyword_t keyword_list[] PROGMEM =
     { "HPGL",       C_HPGL },
     { "progress",   C_PROGRESS },
     { "done",       C_DONE },
+    { "connect",    C_CONNECTED },
 };
 #define MAX_KEYWORDS (sizeof(keyword_list) / sizeof(keyword_list[0]))
 
@@ -422,6 +428,11 @@ static void parse( char *buf_ptr )
         case C_PRESS:      parse_pressure( ); break;
         case C_CURVE:      parse_curve( ); break;
         case C_FLASH:      parse_flash( ); break;
+        case C_CONNECTED:
+        lcd_clear();
+        beep(50);
+        lcd_show_temp_message( "Connected!", 1000 );
+        break;
         case C_FLASHWRITE: 
             cli_flash_write( buf + (token.lex - buf) + strlen(token.lex) ); 
             curtok = argc;

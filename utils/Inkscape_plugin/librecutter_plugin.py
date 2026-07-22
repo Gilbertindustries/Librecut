@@ -14,6 +14,7 @@ class FreecutStreamer:
         self,
         port,
         baudrate=115200,
+        override_dials=False,
         speed=100,
         pressure=200,
         resolution=2,
@@ -22,6 +23,7 @@ class FreecutStreamer:
     ):
         self.port = port
         self.baudrate = baudrate
+        self.override_dials = override_dials
         self.speed = speed
         self.pressure = pressure
         self.resolution = max(0.1, resolution)
@@ -30,12 +32,27 @@ class FreecutStreamer:
         self.ser = None
 
     def connect(self):
-        self.ser = serial.Serial(self.port, self.baudrate, timeout=2)
+        self.ser = serial.Serial()
+        self.ser.port = self.port
+        self.ser.baudrate = self.baudrate
+        self.ser.timeout = 2
+        self.ser.dtr = False
+        self.ser.rts = False
+        self.ser.open()
+
         time.sleep(2)  # Wait for AVR bootloader reset cycle
         self.ser.flushInput()
 
-        self.send_command(f"speed {self.speed}")
-        self.send_command(f"press {self.pressure}")
+        # 1. Send connect command
+        self.send_command("connect")
+        
+        # 2. Hold the message on the LCD for 1.5 seconds so it's readable
+        time.sleep(1.5)
+
+        # 3. Only send setup commands if user explicitly enabled override
+        if self.override_dials:
+            self.send_command(f"speed {self.speed}")
+            self.send_command(f"press {self.pressure}")
 
     def send_command(self, cmd_str):
         if not self.ser or not self.ser.is_open:
@@ -71,7 +88,6 @@ class FreecutStreamer:
 
             subpath_points = []
             for segment in parsed_path:
-                # Calculate sample density based on user resolution setting
                 num_samples = max(2, int(segment.length() / self.resolution))
                 for i in range(num_samples):
                     pt = segment.point(i / (num_samples - 1))
@@ -104,7 +120,11 @@ class FreecutStreamer:
             scale = self.spi
 
         # 4. Generate native CLI commands
-        commands = [f"speed {self.speed}", f"press {self.pressure}"]
+        commands = []
+
+        # Only inject speed/press overrides if explicitly turned on
+        if self.override_dials:
+            commands.extend([f"speed {self.speed}", f"press {self.pressure}"])
 
         for subpath in raw_points:
             # Move to start (Pen UP)
@@ -151,6 +171,7 @@ class FreecutInkscapeExtension(inkex.EffectExtension):
     def add_arguments(self, pars):
         pars.add_argument("--port", type=str, default="COM13")
         pars.add_argument("--baudrate", type=int, default=115200)
+        pars.add_argument("--override_dials", type=inkex.Boolean, default=False)
         pars.add_argument("--speed", type=int, default=100)
         pars.add_argument("--pressure", type=int, default=200)
         pars.add_argument("--resolution", type=float, default=0.5)
@@ -161,6 +182,7 @@ class FreecutInkscapeExtension(inkex.EffectExtension):
         streamer = FreecutStreamer(
             port=self.options.port,
             baudrate=self.options.baudrate,
+            override_dials=self.options.override_dials,
             speed=self.options.speed,
             pressure=self.options.pressure,
             resolution=self.options.resolution,

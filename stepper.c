@@ -379,7 +379,7 @@ again:
                 y = 0;
                 state = READY;
                 lcd_clear();
-                lcd_puts("Ready");
+                lcd_puts("Loading...");
             }
             break;
 

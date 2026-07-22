@@ -2,11 +2,6 @@
  * keypad.c
  *
  * Driver for 16-column x 5-row keypad matrix and status LEDs.
- *
- * Hardware Interface Details:
- * ---------------------------
- * The 16 matrix columns are driven via a 16-bit serial-in/parallel-out shift register.
- * The 5 matrix rows are read simultaneously as digital inputs on PORTG (PG0..PG4).
  */
 
 #include <avr/io.h>
@@ -28,10 +23,21 @@
 #define MAX_COLS 16       // Total columns driven by shift register
 #define MAX_ROWS 5        // Total input rows read by micro
 
-/* Shift register LED bit mask for Load Material key */
+/* Shift register LED bit masks */
 #ifndef LED_LOAD_PAPER
-#define LED_LOAD_PAPER (1 << 8) // Bit 8 maps to key B4
+#define LED_LOAD_PAPER   (1 << 8) // Bit 8 maps to key B4
 #endif
+
+#ifndef LED_UNLOAD_PAPER
+#define LED_UNLOAD_PAPER (1 << 9) 
+#endif
+
+
+//led A1	Row A	Col 1	Bit 0	0x0001 (1 << 0)
+//led A5	Row A	Col 5	Bit 4	0x0010 (1 << 4)
+//led B1	Row B	Col 1	Bit 5	0x0020 (1 << 5)
+//led B4	Row B	Col 4	Bit 8	0x0100 (1 << 8)
+//led B5	Row B	Col 5	Bit 9	0x0200 (1 << 9)
 
 /* -------------------------------------------------------------------------
  * Low-Level Bit Manipulation Macros
@@ -97,35 +103,62 @@ void keypad_update_load_led( void )
     static uint8_t blink_ticks = 0;
     static uint8_t led_state = 0;
 
-    // Only blink if material is NOT loaded
+    // Only blink Load LED if material is NOT loaded
     if( !stepper_is_material_loaded() )
     {
-        // 12 ticks at 25Hz = ~500ms ON / ~500ms OFF (1 Hz steady blink)
         if( ++blink_ticks >= 12 )
         {
             blink_ticks = 0;
             led_state = !led_state;
 
             if( led_state )
-            {
-                leds |= LED_LOAD_PAPER;   // Set bit in global state
-            }
+                leds |= LED_LOAD_PAPER;
             else
-            {
-                leds &= ~LED_LOAD_PAPER;  // Clear bit in global state
-            }
+                leds &= ~LED_LOAD_PAPER;
 
-            keypad_set_leds( leds );     // Write full updated state
+            keypad_set_leds( leds );
         }
     }
     else
     {
-        // Turn off LED completely when material is loaded
         blink_ticks = 0;
         led_state = 0;
         if( leds & LED_LOAD_PAPER )
         {
             leds &= ~LED_LOAD_PAPER;
+            keypad_set_leds( leds );
+        }
+    }
+}
+
+void keypad_update_unload_led( void )
+{
+    static uint8_t blink_ticks = 0;
+    static uint8_t led_state = 0;
+
+    // Only blink Unload LED if material IS loaded
+    if( stepper_is_material_loaded() )
+    {
+        if( ++blink_ticks >= 12 )
+        {
+            blink_ticks = 0;
+            led_state = !led_state;
+
+            if( led_state )
+                leds |= LED_UNLOAD_PAPER;   // FIXED: Corrected to LED_UNLOAD_PAPER
+            else
+                leds &= ~LED_UNLOAD_PAPER;  // FIXED: Corrected to LED_UNLOAD_PAPER
+
+            keypad_set_leds( leds );
+        }
+    }
+    else
+    {
+        blink_ticks = 0;
+        led_state = 0;
+        if( leds & LED_UNLOAD_PAPER )       // FIXED: Corrected to LED_UNLOAD_PAPER
+        {
+            leds &= ~LED_UNLOAD_PAPER;      // FIXED: Corrected to LED_UNLOAD_PAPER
             keypad_set_leds( leds );
         }
     }

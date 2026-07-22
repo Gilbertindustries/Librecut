@@ -267,33 +267,61 @@ void lcd_puts( const char *str )
 /**
  * @brief Checks stepper load status and updates display text dynamically.
  */
+/**
+ * @brief Checks stepper load status and updates display text dynamically.
+ */
+static uint16_t dial_display_timer = 0; // Tracks display hold time in 25Hz ticks
+
+void lcd_show_dial_override( int spd, int prs, int siz )
+{
+    lcd_clear();
+    // Use &lcd stream descriptor to print directly to display
+    fprintf( &lcd, "S:%d P:%d Z:%d", spd, prs, siz );
+    
+    // Hold dial message for 50 ticks (~2 seconds at 25Hz)
+    dial_display_timer = 50; 
+}
+
 void lcd_update_status( void )
 {
-    static uint8_t prev_state = 0xFF;
-    
-    // Don't overwrite the screen if the machine is actively homing!
-    if( stepper_get_state() == HOME1 || stepper_get_state() == HOME2 )
+    static uint8_t prev_loaded_state = 0xFF;
+
+    // 1. If user recently moved a dial, decrement timer and pause normal status/scroll
+    if( dial_display_timer > 0 )
     {
-        // Reset prev_state so that when homing finishes, 
-        // it is forced to redraw the loaded state cleanly.
-        prev_state = 0xFF; 
+        dial_display_timer--;
+        // Reset state tracker so scrolling resumes cleanly after timer expires
+        prev_loaded_state = 0xFF; 
         return;
     }
 
-    uint8_t current_state = stepper_is_material_loaded();
-
-    if( current_state != prev_state )
+    // Don't overwrite screen during homing
+    if( stepper_get_state() == HOME1 || stepper_get_state() == HOME2 )
     {
-        lcd_clear();
-        if( !current_state )
+        prev_loaded_state = 0xFF;
+        return;
+    }
+
+    uint8_t current_loaded_state = stepper_is_material_loaded();
+
+    if( !current_loaded_state )
+    {
+        if( prev_loaded_state != 0 )
         {
+            lcd_clear();
             lcd_puts( "Load Material" );
+            prev_loaded_state = 0;
         }
-        else
+    }
+    else
+    {
+        if( prev_loaded_state != 1 )
         {
-            lcd_puts( "Ready to Cut" );
+            lcd_clear();
+            prev_loaded_state = 1;
         }
-        prev_state = current_state;
+
+        lcd_scroll_text( "Hit flashing key to unload material! Ready to Cut... " );
     }
 }
 
@@ -364,4 +392,55 @@ void lcd_puthex( uint8_t x )
 {
     lcd_putnibble( x >> 4 );
     lcd_putnibble( x & 0x0F );
+}
+
+
+void lcd_show_temp_message( const char *str, uint16_t delay_ms )
+{
+    lcd_clear();
+    lcd_puts( str );
+    msleep( delay_ms );
+    lcd_clear();
+}
+
+
+/**
+ * @brief Non-blocking scroll for long strings across a 16-character LCD screen.
+ * Call this periodically (e.g., inside a 25Hz loop).
+ * @param str The long string to scroll across the screen.
+ */
+void lcd_scroll_text( const char *str )
+{
+    static uint16_t scroll_pos = 0;
+    static uint8_t ticks = 0;
+    uint8_t len = strlen( str );
+
+    // Step the scroll position every 8 ticks (~320ms delay at 25Hz)
+    if( ++ticks >= 8 )
+    {
+        ticks = 0;
+        
+        lcd_clear();
+        
+        // Print 16-character window starting from scroll_pos
+        for( uint8_t i = 0; i < 16; i++ )
+        {
+            uint16_t idx = (scroll_pos + i) % (len + 4); // +4 adds spacing before loop resets
+            if( idx < len )
+            {
+                lcd_putchar( str[idx], NULL );
+            }
+            else
+            {
+                lcd_putchar( ' ', NULL ); // Print padding spaces at end of string
+            }
+        }
+
+        // Advance starting index for the next frame
+        scroll_pos++;
+        if( scroll_pos >= (len + 4) )
+        {
+            scroll_pos = 0; // Wrap back to start
+        }
+    }
 }

@@ -60,9 +60,47 @@ int dial_get_size( void )
     return dial_setting( DIAL_SIZE );
 }
 
+/* --- Mapped Values for Hardware Controls --- */
+
+static const uint16_t speed_delays[5] = {
+    500, // Notch 1 (Index 0): Slowest step delay
+    350, // Notch 2 (Index 1)
+    200, // Notch 3 (Index 2)
+    120, // Notch 4 (Index 3)
+    60   // Notch 5 (Index 4): Fastest step delay
+};
+
+uint16_t dial_get_mapped_speed( void )
+{
+    int step = dial_get_speed(); // Returns 0..4
+    if( step < 0 ) step = 0;
+    if( step > 4 ) step = 4;
+    
+    return speed_delays[step];
+}
+
+static const uint16_t pressure_values[5] = {
+    200,  // Notch 1 (Index 0): Lightest PWM power
+    400,  // Notch 2 (Index 1)
+    600,  // Notch 3 (Index 2)
+    800,  // Notch 4 (Index 3)
+    1023  // Notch 5 (Index 4): Full solenoid power
+};
+
+uint16_t dial_get_mapped_pressure( void )
+{
+    int step = dial_get_pressure(); // Returns 0..4
+    if( step < 0 ) step = 0;
+    if( step > 4 ) step = 4;
+    
+    return pressure_values[step];
+}
+
+/* --- ADC Polling & Control --- */
+
 void dial_poll( void )
 {
-    // Updated legacy ADCSR register name to ADCSRA for modern avr-gcc
+    // Clear interrupt flag and store 8-bit left-adjusted result
     ADCSRA |= (1 << ADIF);
     dial_adc[channel] = ADCH;
     
@@ -76,5 +114,5 @@ void dial_poll( void )
 void dial_init( void )
 {
     ADMUX = (1 << ADLAR) | (1 << REFS0) | channel;
-    ADCSRA = (1 << ADEN) | (1 << ADSC) | 7;
+    ADCSRA = (1 << ADEN) | (1 << ADSC) | 7; // Enable ADC with prescaler = 128
 }

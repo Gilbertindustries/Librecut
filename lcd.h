@@ -18,6 +18,9 @@ void lcd_puts( const char *str );
 void lcd_update_status( void );
 void lcd_backlight_on( void );
 void lcd_backlight_off( void );
+void lcd_scroll_text( const char *str );
+void lcd_show_dial_override( int spd, int prs, int siz );
+void lcd_show_temp_message( const char *str, uint16_t delay_ms );
 
 #ifdef __cplusplus
 }

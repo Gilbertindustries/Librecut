@@ -6,6 +6,7 @@
 void keypad_init( void );
 int  keypad_scan( void );
 void keypad_update_load_led( void );
+void keypad_update_unload_led( void );
 void keypad_set_leds( uint16_t mask );
 void keypad_leds_enable( uint8_t enable );
 char keypad_stop_pressed( void );
