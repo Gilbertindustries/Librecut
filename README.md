@@ -9,13 +9,21 @@ Are you sick and tired of using libcutter with SCAL? Are you sick of Cartridges?
 It enables direct computer control of the machine using basic """""HPGL language support""""" and custom Python utilities. (Please use the Python Utilities)
 
 There is also an Inkscape plugin inside of the utils directory, this is the recommended way to cut files
+---
+# DISCLAMER
 
-**DISCLAMER** 
 Instaling Librecut WILL void your nonexsistant warrenty! 
+
 You CANNOT revert to the original firmware. 
+
 Librecut will render your cartridges USELESS with the device!  
+
 Failed installation of Librecut may render your device USELESS! 
+
+Librecut has ONLY been tested on the CRV001!
+
 This is a software mod that you CANNOT REVERSE! 
+---
 
  **Cricut** is a trademark of **Cricut Incorporated** Formerly Provo Craft.  
 > Freecut and Librecut are not Cricut Inc products. These projects were developed completely independently without official documentation or original firmware code from Cricut Inc. If you encounter issues, do not contact Cricut Inc.
