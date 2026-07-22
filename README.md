@@ -1,56 +1,44 @@
 # Librecut
-No longer fear, my fellow circut crv001 owners, as i am here. 
 
-Firmware for the crv001 to make it useful in the modern day
+*No longer fear, my fellow Cricut CRV001 owners, as I am here.*
 
-__Cricut is a trademark of PROVO CRAFT.__
+**Librecut** (formerly *Librecutter*) is open-source custom firmware designed for the **Cricut™ CRV001 Personal Electronic Cutter** (The first Cricut ever) to make it useful in the modern era.
 
-Freecut or Librecutter is not a PROVO CRAFT product. Freecut was developed completely 
-independently and so was Librecutter , without any documentation to PROVO CRAFT products, and without
-any original firmware. If you have problems with Freecut, do not consult
-PROVO CRAFT. 
+It enables direct computer control of the machine using basic """""HPGL language support""""" and custom Python utilities. (Please use the Python Utilities)
 
-## Librecut aims to modernize and add functions to Arlet's Freecut
+ **Cricut** is a trademark of **PROVO CRAFT**.  
+> Freecut and Librecut are not PROVO CRAFT products. These projects were developed completely independently without official documentation or original firmware code from PROVO CRAFT. If you encounter issues, do not contact PROVO CRAFT.
 
-Librecutter
+---
 
-Librecutter is a open-source free firmware for the Cricut(TM) CRV001 Personal Electronic cutter. 
+## Overview
 
-It allows computer control via half baked HPGL support and python utilities 
+Librecut aims to modernize and expand upon **Arlet’s Freecut** firmware, providing:
+Open-source control for legacy hardware. (CRV001)
+USB-to-HPGL plotting and cutting execution.
+Python-based CLI utilities for sending commands.
 
-# Flashing guide
+---
 
-You will need a avr programmer. 
+## Flashing Guide
 
-J5 is the header that is used to program the cutter on the mainboard. 
+To flash this firmware onto the Cricut mainboard, you will need an **AVR Programmer** (such as a USBasp, AVRISP, or an **Arduino** running the [ArduinoISP sketch](https://docs.arduino.cc/built-in-examples/arduino-isp/ArduinoISP/)).
 
- J5   |  AVR
-------+-----
-  1   |  PDO
-  3   |  SCK
-  4   |  PDI
-  5   |  RESET
-  6   |  GND
+### 1. Board Header Location & Layout
 
-Top view of connector:
+Locate header **`J5`** on the Cricut mainboard. Looking at the **top view** of the board, the pin arrangement relative to the silkscreen is structured as follows:
 
-  J5 Silkscreem
-+----        ---+
-| 9  7  5  3  1 |
-|10  8  6  4  2 |
-+---------------+
+```text
+       J5 Silkscreen
++-------------------------+
+|  9   7   5   3   1   -  |  <-- Odd Pins (Top Row)
+| 10   8   6   4   2   -  |  <-- Even Pins (Bottom Row)
++-------------------------+
 
-Wire pins 1, 3, 4, 5, 6 to the respective pins on your arduino or avr programmer
-
-Cricut Header            Standard AVR ISP
-  (1) PDO   ──────────────>  MOSI
-  (2) +5V   ──────────────>  VCC
-  (3) SCK   ──────────────>  SCK
-  (4) PDI   ──────────────>  MISO
-  (5) RESET ──────────────>  RESET
-  (6) GND   ──────────────>  GND
-
-Please compile with Arduino IDE i dont think the Makefile works
-
-https://docs.arduino.cc/built-in-examples/arduino-isp/ArduinoISP/
-
+Cricut Header (J5)          Standard AVR / Arduino ISP
+   (1) PDO   ------------->  MOSI (Pin 11 on Arduino Uno)
+   (2) +5V   ------------->  VCC  (5V)
+   (3) SCK   ------------->  SCK  (Pin 13 on Arduino Uno)
+   (4) PDI   ------------->  MISO (Pin 12 on Arduino Uno)
+   (5) RESET ------------->  RESET (Pin 10 on Arduino Uno as ISP)
+   (6) GND   ------------->  GND
