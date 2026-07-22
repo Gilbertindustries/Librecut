@@ -8,7 +8,7 @@ It enables direct computer control of the machine using basic """""HPGL language
 
 There is also an Inkscape plugin inside of the utils directory, this is the reccomended way to cut files
 
- **Cricut** is a trademark of **Cricut, Inc** Formerly Provo Craft.  
+ **Cricut** is a trademark of **Cricut Incorporated** Formerly Provo Craft.  
 > Freecut and Librecut are not Cricut Inc products. These projects were developed completely independently without official documentation or original firmware code from Cricut Inc. If you encounter issues, do not contact Cricut Inc.
 
 ---
