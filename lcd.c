@@ -264,9 +264,22 @@ void lcd_puts( const char *str )
 /**
  * @brief Checks stepper load status and updates display text dynamically.
  */
+/**
+ * @brief Checks stepper load status and updates display text dynamically.
+ */
 void lcd_update_status( void )
 {
     static uint8_t prev_state = 0xFF;
+    
+    // Don't overwrite the screen if the machine is actively homing!
+    if( stepper_get_state() == HOME1 || stepper_get_state() == HOME2 )
+    {
+        // Reset prev_state so that when homing finishes, 
+        // it is forced to redraw the loaded state cleanly.
+        prev_state = 0xFF; 
+        return;
+    }
+
     uint8_t current_state = stepper_is_material_loaded();
 
     if( current_state != prev_state )

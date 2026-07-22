@@ -3,13 +3,6 @@
  * Librecut Gilbert Industries
  * Based on Arlet's Freecut
  * Freecut firmware, main program
- *
- * Copyright 2010 <freecutfirmware@gmail.com> 
- *
- * This file is part of Freecut.
- *
- * Freecut is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2.
  */
 
 #include <avr/io.h>
@@ -49,6 +42,8 @@ void poll_keypad( void )
     switch( key )
     {
         case LOAD_PAPER: 
+            // 1. Trigger home sequence when loading paper
+            stepper_home(); 
             stepper_load_paper(); 
             break;
 
@@ -85,7 +80,9 @@ int main( void )
     stdin  = &usb;
 
     printf( "Freecut v" VERSION "\n\n" );
-    fprintf( &lcd, "Freecut v" VERSION );
+    
+    // 2. Initial homing on startup
+    stepper_home();
 
     wdt_enable( WDTO_2S );
 
@@ -100,7 +97,12 @@ int main( void )
             dial_poll( );
             keypad_update_load_led( );
             poll_keypad( );
-            lcd_update_status( ); 
+
+            // 3. Only refresh status screen when NOT active homing
+            if( stepper_get_state() == READY ) 
+            {
+                lcd_update_status( ); 
+            }
         }
 
         if( flag_Hz )
