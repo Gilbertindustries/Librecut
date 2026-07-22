@@ -2,6 +2,8 @@
 
 *No longer fear, my fellow owners of Cricut's from the Bush Administration, as I am here.*
 
+Are you sick and tired of using libcutter with SCAL? Ready for something new and FREE?
+
 **Librecut** (formerly *Librecutter*) is open-source custom firmware that builds on Arlet's Freecut for the **Cricut™ CRV001 Personal Electronic Cutter** (The first Cricut ever) to make it useful in the modern era.
 
 It enables direct computer control of the machine using basic """""HPGL language support""""" and custom Python utilities. (Please use the Python Utilities)
