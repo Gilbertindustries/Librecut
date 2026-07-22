@@ -6,6 +6,8 @@
 
 It enables direct computer control of the machine using basic """""HPGL language support""""" and custom Python utilities. (Please use the Python Utilities)
 
+There is also an Inkscape plugin inside of the utils directory, this is the reccomended way to cut files
+
  **Cricut** is a trademark of **PROVO CRAFT**.  
 > Freecut and Librecut are not PROVO CRAFT products. These projects were developed completely independently without official documentation or original firmware code from PROVO CRAFT. If you encounter issues, do not contact PROVO CRAFT.
 
@@ -13,7 +15,7 @@ It enables direct computer control of the machine using basic """""HPGL language
 
 ## Overview
 
-Librecut aims to modernize and expand upon **Arlet’s Freecut** firmware, providing:
+Librecut aims to modernize and expand upon **Arlet’s Freecut** (thank you goat) firmware, providing:
 Open-source control for legacy hardware. (CRV001)
 USB-to-HPGL plotting and cutting execution.
 Python-based CLI utilities for sending commands.
@@ -34,6 +36,8 @@ Locate header **`J5`** on the Cricut mainboard. Looking at the **top view** of t
 |  9   7   5   3   1   -  |  <-- Odd Pins (Top Row)
 | 10   8   6   4   2   -  |  <-- Even Pins (Bottom Row)
 +-------------------------+
+
+- is not a pin please ignore
 
 Cricut Header (J5)          Standard AVR / Arduino ISP
    (1) PDO   ------------->  MOSI (Pin 11 on Arduino Uno)
