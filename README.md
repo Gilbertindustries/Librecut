@@ -8,6 +8,8 @@ Are you sick and tired of using libcutter with SCAL? Are you sick of Cartridges?
 
 It enables direct computer control of the machine using basic """""HPGL language support""""" and custom Python utilities. (Please use the Python Utilities)
 
+Librecut expands the functions of Freecut by adding a gui and features like setting origin points for cutting
+
 There is also an Inkscape plugin inside of the utils directory, this is the recommended way to cut files
 ---
 # DISCLAMER
@@ -16,11 +18,15 @@ Instaling Librecut WILL void your nonexsistant warrenty!
 
 You CANNOT revert to the original firmware. 
 
+The flashing process DESTROYS the original firmware! There is no documented way to reinstall it.
+
 Librecut will render your cartridges USELESS with the device!  
 
 Failed installation of Librecut may render your device USELESS! 
 
 Librecut has ONLY been tested on the CRV001!
+
+This software IS VIBECODED, make fun all you want but i only know javascript, python and basic C++
 
 This is a software mod that you CANNOT REVERSE! 
 ---
