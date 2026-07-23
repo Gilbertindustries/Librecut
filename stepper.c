@@ -14,6 +14,7 @@
 #include "stepper.h"
 #include "keypad.h"
 #include "timer.h"
+#include "globalvar.h"
 
 #define MAT_EDGE 250       // Distance to roll mat when loading/unloading
 #define MAX_Y    2400      // Upper Y movement limit (steps)
@@ -48,6 +49,10 @@ static const uint8_t phase[16] =
 
 static int x = -MAT_EDGE; 
 static int y = 2400;
+
+/* --- Local Origin Offsets --- */
+static int origin_x = 0;
+static int origin_y = 0;
 
 static int pressure = 1023; 
 
@@ -106,6 +111,20 @@ void stepper_off( void )
     PORTC = 0;
 }
 
+/* --- Origin Offset Control Functions --- */
+
+void stepper_set_origin( void )
+{
+    origin_x = x;
+    origin_y = y;
+}
+
+void stepper_reset_origin( void )
+{
+    origin_x = 0;
+    origin_y = 0;
+}
+
 static struct cmd *alloc_cmd( uint8_t type )
 {
     struct cmd *cmd;
@@ -150,6 +169,7 @@ void stepper_home( void )
 {
     cmd_tail = cmd_head; // Clear buffer queue
     pen_up();
+    stepper_reset_origin(); // Reset origin when homing
     
     lcd_clear();
     lcd_puts("Homing...");
@@ -162,7 +182,8 @@ uint8_t stepper_get_state( void )
     return (uint8_t)state;
 }
 
-void stepper_move( int target_x, int target_y )
+/* Internal helper: moves directly to absolute physical steps (un-offset) */
+static void stepper_move_abs( int target_x, int target_y )
 {
     if( target_x < -MAT_EDGE || target_x > MAX_X || target_y < 0 || target_y > MAX_Y )
         return;
@@ -173,14 +194,27 @@ void stepper_move( int target_x, int target_y )
     cmd_head++;
 }
 
+/* Move relative to current local origin */
+void stepper_move( int target_x, int target_y )
+{
+    int real_x = target_x + origin_x;
+    int real_y = target_y + origin_y;
+
+    stepper_move_abs( real_x, real_y );
+}
+
+/* Draw relative to current local origin */
 void stepper_draw( int target_x, int target_y )
 {
-    if( target_x < 0 || target_x > MAX_X || target_y < 0 || target_y > MAX_Y )
+    int real_x = target_x + origin_x;
+    int real_y = target_y + origin_y;
+
+    if( real_x < 0 || real_x > MAX_X || real_y < 0 || real_y > MAX_Y )
         return;
 
     struct cmd *cmd = alloc_cmd( DRAW );
-    cmd->x = target_x;
-    cmd->y = target_y;
+    cmd->x = real_x;
+    cmd->y = real_y;
     cmd_head++;
 }
 
@@ -193,19 +227,21 @@ void stepper_speed( int speed_val )
 
 void stepper_load_paper( void )
 {
+    stepper_reset_origin(); // Clear origin on paper reload
     if( x < 0 )
     {
         stepper_speed( 250 );   
-        stepper_move( 0, y ); 
+        stepper_move_abs( 0, y ); 
     }
     stepper_speed( 100 );
-    stepper_move( 0, 0 );
+    stepper_move_abs( 0, 0 );
 }
 
 void stepper_unload_paper( void )
 {
+    stepper_reset_origin();
     stepper_speed( 100 );
-    stepper_move( -MAT_EDGE, 0 );
+    stepper_move_abs( -MAT_EDGE, 0 );
 }
 
 void stepper_pressure( int pressure_val )
@@ -215,10 +251,11 @@ void stepper_pressure( int pressure_val )
     cmd_head++;
 }
 
+/* Returns position relative to current origin */
 void stepper_get_pos( int *px, int *py )
 {
-    *px = x;
-    *py = y;
+    *px = x - origin_x;
+    *py = y - origin_y;
 }
 
 static void bresenham_init( int x1, int y1 )
@@ -332,6 +369,7 @@ static stepper_state_t do_next_command( void )
 void stepper_tick( void )
 {
     static uint16_t led_blink_counter = 0;
+    static uint8_t was_moving = 0;
 
     if( pen_seq >= 0 )
     {
@@ -351,15 +389,18 @@ void stepper_tick( void )
     if( delay && --delay )
         return;
 
-    if( keypad_stop_pressed() ) 
-    {
+if( keypad_stop_pressed() ) 
+{
+    if (g_jog_active == 0){
         state = READY;
-        x = 0;
-        cmd_tail = cmd_head; 
+        cmd_tail = cmd_head; // Clear queue
         pen_up();
         stepper_off( );
-        keypad_set_leds( 0x0000 ); 
     }
+    else {
+        g_jog_active = 0; // Fixed: replaced '==' with '='
+    }
+}
 
 again:
     switch( state )
@@ -396,19 +437,22 @@ again:
 
     if( state == READY )
     {
-        stepper_off( ); 
-        keypad_set_leds( 0x0000 ); 
+        if( was_moving )
+        {
+            stepper_off( ); 
+            was_moving = 0;
+        }
         led_blink_counter = 0;
     }
     else
     {
+        was_moving = 1;
         PORTA = phase[x & 0x0F]; 
         PORTC = phase[y & 0x0F]; 
 
         led_blink_counter++;
         if( led_blink_counter >= 400 )
         {
-            keypad_set_leds( 0x0000 ); 
             led_blink_counter = 0;
         }
     }
@@ -418,6 +462,7 @@ void stepper_init( void )
 {
     stepper_off( );
     pen_up( );
+    stepper_reset_origin( );
 
     DDRA = 0xFF;  
     DDRC = 0xFF;  

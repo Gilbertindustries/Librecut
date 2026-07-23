@@ -14,7 +14,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+//HAL FILES
 #include "usb.h"
 #include "keypad.h"
 #include "lcd.h"
@@ -25,6 +25,8 @@ extern "C" {
 #include "spooler.h"
 #include "version.h"
 #include "dial.h"
+//---------------
+#include "globalvar.h"
 
 #ifdef __cplusplus
 }
@@ -37,6 +39,8 @@ static FILE usb;
  * ------------------------------------------------------------------------- */
 #define LOAD_PAPER     0x40 
 #define UNLOAD_PAPER   0x41
+#define SET_ORIGIN_KEY 0x2e  // "Set Origin" / "Set Cut Location" Key Scan Code
+#define STOP (1 << 0)
 
 /* -------------------------------------------------------------------------
  * Directional Jog Keys Mapped:
@@ -56,58 +60,74 @@ void beep(int ms){
     beeper_off( );
 }
 
-void poll_keypad( void )
+static void poll_keypad( void )
 {
-    int key = keypad_scan();
-    if (key < 0) return;
+    int key = keypad_scan( );
 
-    // Only allow jogging when the motor system is idle
-    if (stepper_get_state() != READY) return;
+    if( key < 0 )
+        return;
 
-    int cur_x, cur_y;
-    stepper_get_pos(&cur_x, &cur_y);
+    // --- 1. SET ORIGIN (CUT Button 0x2e) ---
+    if( key == SET_ORIGIN_KEY )
+    {
+        beep(40);
+        msleep(50);
+        beep(40); 
+        stepper_set_origin();
+        g_jog_active = 0; // Exit jog mode
+        lcd_show_temp_message( "Origin Set!", 1200 );
+        return;
+    }
 
+    // --- 2. JOGGING MODE KEY HANDLING ---
+    if( g_jog_active )
+    {
+        int cur_x, cur_y;
+        stepper_get_pos( &cur_x, &cur_y ); // Get current X and Y coordinates
+
+        switch( key )
+        {
+            case KEY_JOG_UP:
+                stepper_move( cur_x - 100, cur_y );
+                break;
+            case KEY_JOG_DOWN:
+                stepper_move( cur_x + 100, cur_y );
+                break;
+            case KEY_JOG_LEFT:
+                stepper_move( cur_x, cur_y + 100 );
+                break;
+            case KEY_JOG_RIGHT:
+                stepper_move( cur_x, cur_y - 100 );
+                break;
+            default:
+                break;
+        }
+        return;
+    }
+
+    // --- 3. NORMAL IDLE KEY HANDLING ---
     switch( key )
     {
-        /* --- Toolhead Carriage (X Axis) --- */
-        case KEY_JOG_DOWN:
-            beep(20);
-            stepper_speed(150);
-            stepper_move(cur_x + 50, cur_y); // DOWN = Carriage Right (+X)
-            break;
-
-        case KEY_JOG_UP:
-            beep(20);
-            stepper_speed(150);
-            stepper_move(cur_x - 50, cur_y); // UP = Carriage Left (-X)
-            break;
-
-        /* --- Roller / Paper Feed (Y Axis) --- */
-        case KEY_JOG_LEFT:
-            beep(20);
-            stepper_speed(150);
-            stepper_move(cur_x, cur_y + 50); // LEFT = Roller Up (+Y)
-            break;
-
-        case KEY_JOG_RIGHT:
-            beep(20);
-            stepper_speed(150);
-            stepper_move(cur_x, cur_y - 50); // RIGHT = Roller Down (-Y)
-            break;
-
-        case LOAD_PAPER: 
-            beep(20);
-            stepper_home(); 
-            stepper_load_paper(); 
+        case LOAD_PAPER:
+            beep(60);
+            stepper_load_paper( );
             break;
 
         case UNLOAD_PAPER:
-            beep(20);
-            stepper_unload_paper(); 
+            beep(60);
+            stepper_unload_paper( );
+            break;
+
+        case KEY_JOG_UP:
+        case KEY_JOG_DOWN:
+        case KEY_JOG_LEFT:
+        case KEY_JOG_RIGHT:
+            g_jog_active = 1;
+            beep(40);
             break;
 
         default:
-            printf("# unknown key %02x\n", key);
+            printf( "unknown key %02x\n", key );
             break;
     }
 }
@@ -155,13 +175,17 @@ int main( void )
     sei( );
     lcd_init( );
     keypad_init( );
+    
+    // --- Trigger startup LED animation ---
+    keypad_boot_animation( );
+
     flash_init( );
     dial_init( );
 
     beeper_on( 1760 );
     msleep( 10 );
     beeper_off( );
-
+    globalvar_init();
     stdout = &usb;
     stdin  = &usb;
 
@@ -181,8 +205,8 @@ int main( void )
         if( flag_25Hz )
         {
             flag_25Hz = 0;
-            dial_poll( );              // Reads the ADC channels
-            check_and_apply_dials( );  // <-- Added: Applies updated dial settings to motors/solenoid
+            dial_poll( );
+            check_and_apply_dials( );
             
             keypad_update_load_led( );
             keypad_update_unload_led( );

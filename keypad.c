@@ -8,13 +8,15 @@
 #include <avr/interrupt.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include "timer.h"
 #include "keypad.h"
 #include "stepper.h"
+#include "globalvar.h"
 
 /* -------------------------------------------------------------------------
  * Hardware Pin Masks & Definitions
  * ------------------------------------------------------------------------- */
-#define STOP    (1 << 0)  // PD0: Stop Button input
+#define STOP    (1 << 0)  // PD0: Stop Button input (Active Low)
 #define LEDS    (1 << 5)  // PD5: LED Output Enable control line
 #define DATA    (1 << 6)  // PD6: Shift Register Data bit
 #define CLK     (1 << 7)  // PD7: Shift Register Clock bit
@@ -32,23 +34,16 @@
 #define LED_UNLOAD_PAPER (1 << 9) 
 #endif
 
-
-//led A1	Row A	Col 1	Bit 0	0x0001 (1 << 0)
-//led A5	Row A	Col 5	Bit 4	0x0010 (1 << 4)
-//led B1	Row B	Col 1	Bit 5	0x0020 (1 << 5)
-//led B4	Row B	Col 4	Bit 8	0x0100 (1 << 8)
-//led B5	Row B	Col 5	Bit 9	0x0200 (1 << 9)
-
 /* -------------------------------------------------------------------------
- * Low-Level Bit Manipulation Macros
+ * Low-Level Bit Manipulation Macros (Preserving PD0 / STOP Pull-up)
  * ------------------------------------------------------------------------- */
-#define leds_on()   do { PORTD &= ~LEDS; } while(0)
-#define leds_off()  do { PORTD |=  LEDS; } while(0)
+#define leds_on()   do { PORTD = (PORTD & ~LEDS) | STOP; } while(0)
+#define leds_off()  do { PORTD |= (LEDS | STOP);         } while(0)
 
-#define clk_h()     do { PORTD |=  CLK;  } while(0)
-#define clk_l()     do { PORTD &= ~CLK;  } while(0)
+#define clk_h()     do { PORTD |= CLK;  } while(0)
+#define clk_l()     do { PORTD &= ~CLK; } while(0)
 
-#define data_h()    do { PORTD |=  DATA; } while(0)
+#define data_h()    do { PORTD |= DATA; } while(0)
 #define data_l()    do { PORTD &= ~DATA; } while(0)
 
 #define get_rows()  (~PING & ROWS)
@@ -68,10 +63,11 @@ static void keypad_write_cols( int16_t val )
     int i;
     for( i = 0; i < MAX_COLS; i++ )
     {
+        // Preserve STOP (PD0) pull-up while setting DATA (PD6)
         if( val < 0 ) 
-            data_h( );
+            PORTD |= DATA | STOP;
         else
-            data_l( );
+            PORTD = (PORTD & ~DATA) | STOP;
 
         clk_h( );
         val <<= 1;
@@ -104,7 +100,7 @@ void keypad_update_load_led( void )
     static uint8_t led_state = 0;
 
     // Only blink Load LED if material is NOT loaded
-    if( !stepper_is_material_loaded() )
+    if( !stepper_is_material_loaded() && g_jog_active == 0 )
     {
         if( ++blink_ticks >= 12 )
         {
@@ -130,14 +126,38 @@ void keypad_update_load_led( void )
         }
     }
 }
+void keypad_boot_animation( void )
+{
+    // 1. Scan across all 16 shift register channels left-to-right
+    for( int col = 0; col < 16; col++ )
+    {
+        keypad_set_leds( 1 << col );
+        msleep( 25 );
+    }
 
+    // 2. Scan right-to-left
+    for( int col = 14; col >= 0; col-- )
+    {
+        keypad_set_leds( 1 << col );
+        msleep( 25 );
+    }
+
+    // 3. Double-flash all LEDs on completion
+    for( int i = 0; i < 2; i++ )
+    {
+        keypad_set_leds( 0xFFFF );
+        msleep( 80 );
+        keypad_set_leds( 0x0000 );
+        msleep( 80 );
+    }
+}
 void keypad_update_unload_led( void )
 {
     static uint8_t blink_ticks = 0;
     static uint8_t led_state = 0;
 
     // Only blink Unload LED if material IS loaded
-    if( stepper_is_material_loaded() )
+    if( stepper_is_material_loaded() && g_jog_active == 0 )
     {
         if( ++blink_ticks >= 12 )
         {
@@ -145,9 +165,9 @@ void keypad_update_unload_led( void )
             led_state = !led_state;
 
             if( led_state )
-                leds |= LED_UNLOAD_PAPER;   // FIXED: Corrected to LED_UNLOAD_PAPER
+                leds |= LED_UNLOAD_PAPER;
             else
-                leds &= ~LED_UNLOAD_PAPER;  // FIXED: Corrected to LED_UNLOAD_PAPER
+                leds &= ~LED_UNLOAD_PAPER;
 
             keypad_set_leds( leds );
         }
@@ -156,9 +176,9 @@ void keypad_update_unload_led( void )
     {
         blink_ticks = 0;
         led_state = 0;
-        if( leds & LED_UNLOAD_PAPER )       // FIXED: Corrected to LED_UNLOAD_PAPER
+        if( leds & LED_UNLOAD_PAPER )
         {
-            leds &= ~LED_UNLOAD_PAPER;      // FIXED: Corrected to LED_UNLOAD_PAPER
+            leds &= ~LED_UNLOAD_PAPER;
             keypad_set_leds( leds );
         }
     }
@@ -166,6 +186,8 @@ void keypad_update_unload_led( void )
 
 char keypad_stop_pressed( void )
 {
+    // Ensure PD0 pull-up input bit is maintained
+    PORTD |= STOP;
     return !(PIND & STOP);
 }
 
@@ -186,7 +208,7 @@ int keypad_scan( void )
         clk_l( );
     }
 
-    // Restore active LED state after matrix scan completes
+    // Restore active LED state and ensure STOP pull-up remains active
     keypad_write_cols( (int16_t)~leds );
     leds_on( ); 
 
@@ -215,12 +237,14 @@ int keypad_scan( void )
 
 void keypad_init( void )
 {
+    // Configure Pin Directions
+    DDRD |= (LEDS | DATA | CLK); // Output pins
+    DDRD &= ~STOP;               // PD0 is Input
+    PORTD |= STOP;               // Enable internal pull-up on PD0
+
+    DDRG &= ~ROWS;               // Input rows PG0..PG4
+    PORTG |= ROWS;               // Internal pull-ups on rows
+
     clk_l( );
     leds_off( );
-
-    DDRD |= (LEDS | DATA | CLK); 
-    PORTD |= STOP;
-
-    DDRG &= ~ROWS;  
-    PORTG |= ROWS;  
 }

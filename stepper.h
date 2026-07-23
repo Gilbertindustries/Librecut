@@ -85,6 +85,8 @@ void stepper_unload_paper( void );
  * @brief Moves mat into position under drive rollers.
  */
 void stepper_load_paper( void );
+void stepper_set_origin( void );
+void stepper_reset_origin( void );
 
 #ifdef __cplusplus
 }

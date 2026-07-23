@@ -49,6 +49,7 @@
 #include "lcd.h"
 #include "timer.h"
 #include "stepper.h"
+#include "globalvar.h"
 
 /* -------------------------------------------------------------------------
  * Bit Masks & Control Line Macros
@@ -302,6 +303,20 @@ void lcd_update_status( void )
         return;
     }
 
+    // 2. Check if the machine is currently jogging
+    if( g_jog_active == 1) // Replace JOGGING with your actual state enum/macro
+    {
+        if( prev_loaded_state != 2 ) // Using state '2' to track the Jogger display state
+        {
+            lcd_clear();
+            prev_loaded_state = 2;
+        }
+
+        lcd_scroll_text( "Origin mode active. Press CUT to set origin. Press STOP to exit... " );
+        return;
+    }
+
+    // 3. Normal Material Status Logic
     uint8_t current_loaded_state = stepper_is_material_loaded();
 
     if( !current_loaded_state )

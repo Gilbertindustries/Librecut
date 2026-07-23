@@ -11,4 +11,7 @@ void keypad_set_leds( uint16_t mask );
 void keypad_leds_enable( uint8_t enable );
 char keypad_stop_pressed( void );
 
+/* Startup animation function */
+void keypad_boot_animation( void );
+
 #endif // KEYPAD_H
