@@ -208,7 +208,6 @@ int main( void )
     stdin  = &usb;
 
     printf( "Librecut v" VERSION "\n\n" );
-    
     // Initial homing sequence on boot
     lcd_show_temp_message( "Librecut v" VERSION "", 1500 );
     stepper_home();

@@ -80,11 +80,11 @@ uint16_t dial_get_mapped_speed( void )
 }
 
 static const uint16_t pressure_values[5] = {
-    200,  // Notch 1 (Index 0): Lightest PWM power
-    400,  // Notch 2 (Index 1)
-    600,  // Notch 3 (Index 2)
-    800,  // Notch 4 (Index 3)
-    1023  // Notch 5 (Index 4): Full solenoid power
+    1000, // Index 0 (Selected at Notch 1): 
+    850,  // Index 1 (Selected at Notch 2)
+    700,  // Index 2 (Selected at Notch 3)
+    500,  // Index 3 (Selected at Notch 4)
+    100   // Index 4 (Selected at Notch 5): 
 };
 
 uint16_t dial_get_mapped_pressure( void )

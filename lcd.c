@@ -344,6 +344,7 @@ void lcd_update_status( void )
  * @brief Initializes hardware lines, configures standard output FILE stream, 
  * and performs the HD44780 4-bit initialization sequence.
  */
+ 
 void lcd_init( void )
 {
     // Bind stdout stream descriptor for standard C formatting compatibility

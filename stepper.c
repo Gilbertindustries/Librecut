@@ -398,7 +398,13 @@ if( keypad_stop_pressed() )
         stepper_off( );
     }
     else {
+      
         g_jog_active = 0; // Fixed: replaced '==' with '='
+         beeper_on( 1760 );
+    msleep( 30 );
+    beeper_off( );
+        stepper_home();
+        
     }
 }
 
