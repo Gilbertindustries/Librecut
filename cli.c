@@ -205,7 +205,7 @@ static void parse_progress( void )
 
 void version( void )
 {
-    printf( "Librecut version " VERSION "\n");
+    printf( "Librecut version " VERSION  " " DEVICE "\n");
 }
 
 static void parse_single_led( void )

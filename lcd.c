@@ -336,7 +336,7 @@ void lcd_update_status( void )
             prev_loaded_state = 1;
         }
 
-        lcd_scroll_text( "Hit flashing key to unload material! Ready to Cut... " );
+        lcd_scroll_text( "Ready to Cut!   Hit flashing key to unload material... " );
     }
 }
 

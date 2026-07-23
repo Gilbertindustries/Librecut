@@ -163,6 +163,24 @@ void check_and_apply_dials( void )
     }
 }
 
+void boot_sound( void )
+{
+    // Ascending arpeggio: C5 (523Hz) -> E5 (659Hz) -> G5 (784Hz) -> C6 (1047Hz)
+    beeper_on( 523 );  
+    msleep( 60 );
+    
+    beeper_on( 659 );  
+    msleep( 60 );
+    
+    beeper_on( 784 );  
+    msleep( 60 );
+    
+    beeper_on( 1047 ); 
+    msleep( 150 ); // Hold the high note a little longer
+    
+    beeper_off();
+}
+
 int main( void )
 {
     wdt_disable();
