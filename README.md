@@ -53,6 +53,10 @@ You will also need the [Arduino IDE](https://www.arduino.cc/en/software/) to com
 
 You will also need to install MegaCore for the Arduino IDE, the installation guide can be found [Here](https://github.com/MCUdude/MegaCore#how-to-install)
 
+To flash you will need to set your board in the Arduino IDE as an ATmega128
+
+Choose your programmer and you can upload it by going to Sketch -> Upload Using Programmer (If your using Arduino ISP)
+
 ### 1. Board Header Location & Layout
 
 Locate header **`J5`** on the Cricut mainboard. Looking at the **top view** of the board, the pin arrangement relative to the silkscreen is structured as follows:
@@ -73,3 +77,4 @@ Cricut Header (J5)          Standard AVR / Arduino ISP
    (4) PDI   ------------->  MISO (Pin 12 on Arduino Uno)
    (5) RESET ------------->  RESET (Pin 10 on Arduino Uno as ISP)
    (6) GND   ------------->  GND
+
