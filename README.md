@@ -16,6 +16,8 @@ Instaling Librecut WILL void your nonexsistant warrenty!
 
 You CANNOT revert to the original firmware. 
 
+The flashing process DESTROYS the original firmware! There is no documented way to reinstall it.
+
 Librecut will render your cartridges USELESS with the device!  
 
 Failed installation of Librecut may render your device USELESS! 
