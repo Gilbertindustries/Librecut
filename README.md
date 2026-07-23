@@ -26,6 +26,8 @@ Failed installation of Librecut may render your device USELESS!
 
 Librecut has ONLY been tested on the CRV001!
 
+This software IS VIBECODED, make fun all you want but i only know javascript, python and basic C++
+
 This is a software mod that you CANNOT REVERSE! 
 ---
 
