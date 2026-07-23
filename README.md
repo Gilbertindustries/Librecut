@@ -51,6 +51,8 @@ To flash this firmware onto the Cricut mainboard, you will need an **AVR Program
 
 You will also need the [Arduino IDE](https://www.arduino.cc/en/software/) to compile Librecut. 
 
+You will also need to install MegaCore for the Arduino IDE, the installation guide can be found [Here](https://github.com/MCUdude/MegaCore#how-to-install)
+
 ### 1. Board Header Location & Layout
 
 Locate header **`J5`** on the Cricut mainboard. Looking at the **top view** of the board, the pin arrangement relative to the silkscreen is structured as follows:
